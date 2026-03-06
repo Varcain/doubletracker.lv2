@@ -6,19 +6,25 @@ An LV2 guitar double-tracking plugin written in [Faust](https://faust.grame.fr/)
 
 The plugin takes a mono guitar input and produces stereo output: the dry signal on the left channel and an algorithmically "doubled" copy on the right.
 
-The wet path applies three layers of processing to differentiate it from the dry signal:
+The wet path applies several layers of processing to differentiate it from the dry signal:
 
-1. **Micro-delay** - On each detected pick onset, a new random delay (1-60 ms depending on Timing) is chosen and smoothly crossfaded. This simulates the natural timing variation between two separate performances.
-2. **Allpass phase shifting** - 8 cascaded first-order allpass filters with slowly modulated coefficients create subtle timbral differences, similar to the comb-filtering that occurs when two mics capture the same source at slightly different positions.
-3. **Pitch modulation** - A very slow (~0.07 Hz) modulated delay line adds ~0.15 ms of pitch drift, simulating the micro-intonation differences between two takes.
+1. **Micro-delay** - A slowly wandering delay (5-60 ms depending on Timing) built from quasi-random sinusoidal wander plus a slow drift component. Simulates natural timing variation between two performances.
+2. **Allpass phase shifting** - 8 cascaded first-order allpass filters with LFO-modulated coefficients. The Push control scales both the modulation depth and speed, creating timbral/phase differences between the channels.
+3. **Pitch modulation** - A filtered-noise modulated delay line (centered at 5 ms, up to ±10 ms depth) adds stochastic pitch drift. Drift depth increases during sustained notes via onset detection.
+4. **Spectral tilt** - A slowly wandering high-shelf filter (±1.1 dB at 1 kHz) provides time-varying tonal variation.
+5. **Asymmetric saturation** - Soft clipping with 2nd and 3rd harmonic generation adds timbral coloring that differs from the dry signal.
+6. **Transient softener** - Reduces fast attack transients by up to 25%, simulating pick angle and pressure variation between takes.
+
+The wet channel has a fixed +1.5 dB gain bias to keep it consistently present in the mix.
 
 ## Parameters
 
-| Parameter | Range | Description |
-|---|---|---|
-| **Timing** | 0.0 - 1.0 | Controls the range of random micro-delays. Low values give tight, chorus-like doubling. High values give a looser, more human feel. |
-| **Push** | 0.0 - 1.0 | Controls the depth of allpass phase shifting. At 0 the wet signal is timbrally identical to the dry. At 1.0 there is noticeable tonal movement. |
-| **Sensitivity** | 0.0 - 1.0 | Controls onset detection threshold. Low sensitivity only triggers new delay values on hard picks. High sensitivity triggers on soft playing too. |
+| Parameter | Range | Default | Description |
+|---|---|---|---|
+| **Timing** | 0.0 - 1.0 | 0.5 | Controls the range of micro-delays (5-60 ms). Low values give tight doubling, high values give a looser feel. |
+| **Push** | 0.0 - 1.0 | 0.5 | Controls allpass phase-shifting depth and LFO speed (1×-6×). At 0 the wet signal has no phase modulation. At 1.0 there is noticeable tonal movement. |
+| **Sensitivity** | 0.0 - 1.0 | 0.5 | Onset detection threshold. Covers the full dynamic range from quiet DI picking (high sensitivity) to heavy distortion (low sensitivity). Used to scale pitch drift depth on sustained notes. |
+| **Output** | -12 - +6 dB | 0 dB | Output gain applied to both channels. |
 
 ## Building
 
