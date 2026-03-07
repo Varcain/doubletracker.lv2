@@ -21,10 +21,14 @@ PREFIX ?= $(HOME)/.lv2
 BUNDLE = doubletracker.lv2
 DSP    = dsp/doubletracker.dsp
 
+# Faust flags: -ftz 1 inserts fabs-based denormal flushing (works on all architectures)
+# -ftz 2 (mask-based) is faster but has a Faust codegen bug with negated temps
+FAUST_FLAGS = -ftz 1
+
 .PHONY: all clean install uninstall
 
 all:
-	faust2lv2 $(DSP)
+	faust2lv2 $(FAUST_FLAGS) $(DSP)
 
 clean:
 	rm -rf $(BUNDLE)

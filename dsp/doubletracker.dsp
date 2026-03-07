@@ -73,11 +73,15 @@ allpassChain = fi.tf1(c1, 1, c1) : fi.tf1(c2, 1, c2)
              : fi.tf1(c7, 1, c7) : fi.tf1(c8, 1, c8);
 
 // === Subtle pitch modulation ===
-// Modulated delay line with filtered-noise LFO for stochastic intonation drift
+// Modulated delay line with quasi-random LFO for stochastic intonation drift
+// Uses incommensurable sub-Hz oscillators instead of filtered noise to avoid
+// float32 numerical instability in narrow-band IIR filters (fi.lowpass at 0.7 Hz
+// has filter state ~1e5x larger than output due to coefficient quantization,
+// and FMA on ARM64 can push the effective pole outside the unit circle).
 pitchCenterMs = 5.0;
 pitchDepthMs  = 10.0;
 pitchMaxDelay = int((pitchCenterMs + pitchDepthMs * 2.0) * 0.001 * MAX_SR) + 1;
-pitchLfo = no.noise : fi.lowpass(2, 0.7);
+pitchLfo = os.osc(0.043) * 0.5 + os.osc(0.071) * 0.3 + os.osc(0.109) * 0.2;
 
 // === Subtle nonlinear coloring ===
 // Asymmetric soft saturation for timbral variation between takes
